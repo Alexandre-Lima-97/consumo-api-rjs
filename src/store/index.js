@@ -1,21 +1,44 @@
-import { persistStore } from 'redux-persist';
 import { configureStore } from '@reduxjs/toolkit';
-// import createSagaMiddleware from 'redux-saga';
-
-// import persistedReducers from './modules/reduxPersist';
+import { persistStore, persistReducer } from 'redux-persist';
+  import createSagaMiddleware from 'redux-saga';
+  import storage from 'redux-persist/lib/storage'
 
 import rootReducer from './modules/rootReducer';
-// import rootSaga from './modules/rootSaga';
+import authSaga from './modules/auth/saga';
+import registerSaga from './modules/register/saga';
+import authReducer from './modules/auth/state';
+import registerReducer from './modules/register/state';
 
-// const sagaMiddleware = createSagaMiddleware();
+const persistConfig = {
+  key: 'CONSUMO-API',
+  version: 1,
+  storage,
+  whitelist: ['auth'],
+}
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+const saga = createSagaMiddleware();
 
 const store = configureStore({
-  reducer: {rootReducer},
-
-
-  });
-
-// sagaMiddleware.run(rootSaga);
+  reducer: {
+    persistedReducer,
+    auth: authReducer,
+    register: registerReducer},
+  middleware: [saga]
+});
+saga.run(authSaga);
+saga.run(registerSaga);
 
 export const persistor = persistStore(store);
 export default store;
+
+
+/*
+(getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    }),
+    */
